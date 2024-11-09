@@ -18,6 +18,8 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,9 +49,49 @@ type PipelineReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var pipeline pipemanagerv1alpha1.Pipeline
+	if err := r.Get(ctx, req.NamespacedName, &pipeline); err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("Pipeline resource not found. Ignoring since object must be deleted.")
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "Failed to get PushMain.")
+		return ctrl.Result{}, err
+	}
+
+	// TODO: Your logic here (Next an example)
+
+	log.Info("Pipeline spec", "spec", pipeline.Spec)
+
+	// TODO: Normalize
+	fmt.Println("Normalize... Under construction.")
+	// -- Read spec from k8s object (only one pipeline)
+	// -- Refactor Normalize to work only with one pipeline
+	// Normalize the pipelines
+	//pipelines, err := normalize.Normalize(rawPipelines)
+	//if err != nil {
+	//	logging.Logger.Error("Error normalizing pipelines", "msg", err)
+	//	os.Exit(ErrCodeNormalize)
+	//}
+
+	// Aquí puedes iterar sobre las tareas y gestionar cada una
+	for taskName, task := range pipeline.Spec.Tasks {
+		log.Info("Processing Task", "TaskName", taskName, "Description", task.Description)
+		for _, step := range task.Steps {
+			log.Info("  Step", "Name", step.Name, "Image", step.Image)
+			// Implementa la lógica para manejar cada step
+			// Por ejemplo, crear Pods o Jobs según los steps
+		}
+	}
+
+	// Actualizar el estado si es necesario
+	// pushMain.Status.SomeField = "SomeValue"
+	// if err := r.Status().Update(ctx, &pushMain); err != nil {
+	//     logger.Error(err, "Failed to update PushMain status")
+	//     return ctrl.Result{}, err
+	// }
 
 	return ctrl.Result{}, nil
 }
