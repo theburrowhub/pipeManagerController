@@ -21,6 +21,9 @@ CONTAINER_TOOL ?= docker
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
+# SSH_PRIVATE_KEY is the path to the private key used to access the devbox
+SSH_PRIVATE_KEY?=$(HOME)/.ssh/id_rsa
+
 .PHONY: all
 all: build
 
@@ -45,7 +48,9 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	#$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -210,3 +215,15 @@ mv $(1) $(1)-$(3) ;\
 } ;\
 ln -sf $(1)-$(3) $(1)
 endef
+
+.PHONY: shell
+shell: ## Open a shell in the devbox
+	if ! command -v devbox &> /dev/null; then \
+    echo "devbox is not installed. Installing devbox..."; \
+		curl -fsSL https://get.jetify.com/devbox | bash; \
+	fi
+	SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY} devbox shell
+
+clean: ## Clean up
+	rm -rf ${KUBECONFIG}
+	rm -rf vendor
