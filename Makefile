@@ -215,14 +215,3 @@ mv $(1) $(1)-$(3) ;\
 ln -sf $(1)-$(3) $(1)
 endef
 
-.PHONY: shell
-shell: ## Open a shell in the devbox
-	if ! command -v devbox &> /dev/null; then \
-    echo "devbox is not installed. Installing devbox..."; \
-		curl -fsSL https://get.jetify.com/devbox | bash; \
-	fi
-	SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY} devbox shell
-
-clean: ## Clean up
-	rm -rf ${KUBECONFIG}
-	rm -rf vendor
