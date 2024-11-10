@@ -187,4 +187,8 @@ type PipelineList struct {
 
 func init() {
 	SchemeBuilder.Register(&Pipeline{}, &PipelineList{})
+	err := AddToScheme(Scheme)
+	if err != nil {
+		return
+	}
 }
