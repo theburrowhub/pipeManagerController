@@ -1,3 +1,5 @@
+# TODO: Help text for each target
+
 # Image URL to use all building/pushing image targets
 K3D_REGISTRY_NAME ?= k3d-registry
 K3D_REGISTRY_PORT ?= 5111
