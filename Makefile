@@ -1,5 +1,12 @@
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+K3D_REGISTRY_NAME ?= k3d-registry
+K3D_REGISTRY_PORT ?= 5111
+IMAGE_NAME ?= controller
+IMG ?= ${IMAGE_NAME}:latest
+ifneq ($(K3D_REGISTRY_NAME),)
+  IMG := ${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/${IMAGE_NAME}:latest
+endif
+
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.31.0
 
