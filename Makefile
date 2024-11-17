@@ -1,10 +1,11 @@
 # Image URL to use all building/pushing image targets
 K3D_REGISTRY_NAME ?= k3d-registry
 K3D_REGISTRY_PORT ?= 5111
-IMAGE_NAME ?= controller
-IMG ?= ${IMAGE_NAME}:latest
+IMAGE_NAME ?= pipemanager-controller
+TAG ?= $(shell cz version -p)
+IMG ?= ${IMAGE_NAME}:${TAG}
 ifneq ($(K3D_REGISTRY_NAME),)
-  IMG := ${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/${IMAGE_NAME}:latest
+  IMG := ${K3D_REGISTRY_NAME}:${K3D_REGISTRY_PORT}/${IMAGE_NAME}:${TAG}
 endif
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
