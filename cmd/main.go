@@ -19,6 +19,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"log"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -38,12 +39,17 @@ import (
 	pipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 	"github.com/sergiotejon/pipeManagerController/internal/controller"
 	// +kubebuilder:scaffold:imports
+
+	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme     = runtime.NewScheme()
+	setupLog   = ctrl.Log.WithName("setup")
+	configFile string
 )
+
+const defaultConfigFile = "/etc/pipe-manager/config.yaml" // defaultConfigFile is the default configuration file
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -69,6 +75,7 @@ func main() {
 		"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+	flag.StringVar(&configFile, "config", defaultConfigFile, "Path to the config file")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -76,6 +83,12 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	// Load configuration
+	err := config.LoadLauncherConfig(configFile)
+	if err != nil {
+		log.Fatalf("Error loading launcher config: %v", err)
+	}
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
