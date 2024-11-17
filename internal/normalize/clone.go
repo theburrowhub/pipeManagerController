@@ -6,7 +6,7 @@ import (
 
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 
-	"github.com/sergiotejon/pipeManager/internal/pkg/config"
+	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
 )
 
 // defineCloneRepoStep defines the clone repository step in the task

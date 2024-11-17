@@ -10,8 +10,8 @@ import (
 
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 
-	"github.com/sergiotejon/pipeManager/internal/pkg/config"
-	"github.com/sergiotejon/pipeManager/internal/pkg/envvars"
+	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
+	"github.com/sergiotejon/pipeManagerLauncher/pkg/envvars"
 )
 
 // defineDownloadArtifactsStep defines the download artifacts step in the task
