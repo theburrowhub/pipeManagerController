@@ -34,6 +34,8 @@ SHELL = /usr/bin/env bash -o pipefail
 # SSH_PRIVATE_KEY is the path to the private key used to access the devbox
 SSH_PRIVATE_KEY?=$(HOME)/.ssh/id_rsa
 
+FLAGS ?= --config config/config_example.yaml
+
 .PHONY: all
 all: build
 
@@ -110,7 +112,7 @@ build: manifests generate fmt vet ## Build manager binary.
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./cmd/main.go
+	go run ./cmd/main.go ${FLAGS}
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
