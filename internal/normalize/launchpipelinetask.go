@@ -9,7 +9,6 @@ import (
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 
 	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
-	"github.com/sergiotejon/pipeManagerLauncher/pkg/envvars"
 )
 
 const envVarPrefix = "PIPELINE_"
@@ -18,8 +17,8 @@ const envVarPrefix = "PIPELINE_"
 func defineLaunchPipelineTask(currentPipeline v1alpha1.PipelineSpec, repository, commit, pipelineToLaunch string) v1alpha1.Task {
 	var env []corev1.EnvVar
 
-	// Set the parameters for the new pipeline through environment variables
-	for name, value := range envvars.Variables {
+	// Set the parameters for the new pipeline through pipeline parameters
+	for name, value := range currentPipeline.Params {
 		env = append(env, corev1.EnvVar{
 			Name:  envVarPrefix + name,
 			Value: value,

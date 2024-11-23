@@ -137,14 +137,14 @@ func processTask(logger logr.Logger, pipe v1alpha1.PipelineSpec, taskName string
 	cloneRepository := pipe.CloneRepository.Enable || taskData.CloneRepository.Enable
 	if cloneRepository {
 		logger.Info("Adding clone repository step", "taskName", taskName)
-		cloneRepositoryStep := defineCloneRepoStep(logger, taskData, repository, commit)
+		cloneRepositoryStep := defineCloneRepoStep(taskData, repository, commit)
 		firstSteps = append(firstSteps, cloneRepositoryStep)
 
 		// Download artifacts if it is defined as true in the pipe or in the task itself and the clone repository step is enabled
 		artifacts := pipe.CloneRepository.Options.Artifacts || taskData.CloneRepository.Options.Artifacts
 		if artifacts {
 			logger.Info("Adding download artifacts step", "taskName", taskName)
-			downloadArtifactsStep := defineDownloadArtifactsStep(logger, taskData)
+			downloadArtifactsStep := defineDownloadArtifactsStep(logger, taskData, repository, commit)
 			firstSteps = append(firstSteps, downloadArtifactsStep)
 		}
 
@@ -152,7 +152,7 @@ func processTask(logger logr.Logger, pipe v1alpha1.PipelineSpec, taskName string
 		caches := pipe.CloneRepository.Options.Cache || taskData.CloneRepository.Options.Cache
 		if caches {
 			logger.Info("Adding download cache step", "taskName", taskName)
-			downloadCacheStep := defineDownloadCacheStep(logger, taskData)
+			downloadCacheStep := defineDownloadCacheStep(logger, taskData, repository, commit)
 			firstSteps = append(firstSteps, downloadCacheStep)
 		}
 	}
@@ -169,7 +169,7 @@ func processTask(logger logr.Logger, pipe v1alpha1.PipelineSpec, taskName string
 		artifacts := pipe.CloneRepository.Options.Artifacts || taskData.CloneRepository.Options.Artifacts
 		if artifacts {
 			logger.Info("Adding upload artifacts step", "taskName", taskName)
-			uploadArtifactsStep := defineUploadArtifactsStep(logger, taskData)
+			uploadArtifactsStep := defineUploadArtifactsStep(logger, taskData, repository, commit)
 			lastSteps = append(lastSteps, uploadArtifactsStep)
 		}
 
@@ -177,7 +177,7 @@ func processTask(logger logr.Logger, pipe v1alpha1.PipelineSpec, taskName string
 		caches := pipe.CloneRepository.Options.Cache || taskData.CloneRepository.Options.Cache
 		if caches {
 			logger.Info("Adding upload cache step", "taskName", taskName)
-			uploadCacheStep := defineUploadCacheStep(logger, taskData)
+			uploadCacheStep := defineUploadCacheStep(logger, taskData, repository, commit)
 			lastSteps = append(lastSteps, uploadCacheStep)
 		}
 	}

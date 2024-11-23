@@ -11,31 +11,34 @@ import (
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 
 	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
-	"github.com/sergiotejon/pipeManagerLauncher/pkg/envvars"
 )
 
 // defineDownloadArtifactsStep defines the download artifacts step in the task
-func defineDownloadArtifactsStep(logger logr.Logger, taskData v1alpha1.Task) v1alpha1.Step {
-	return defineArtifactBucketStep(logger, "artifacts", "download", taskData.Paths.Artifacts)
+func defineDownloadArtifactsStep(logger logr.Logger, taskData v1alpha1.Task, repository, commit string) v1alpha1.Step {
+	return defineArtifactBucketStep(logger, "artifacts", "download",
+		taskData.Paths.Artifacts, repository, commit)
 }
 
 // defineDownloadCacheStep defines the download cache step in the task
-func defineDownloadCacheStep(logger logr.Logger, taskData v1alpha1.Task) v1alpha1.Step {
-	return defineArtifactBucketStep(logger, "cache", "download", taskData.Paths.Cache)
+func defineDownloadCacheStep(logger logr.Logger, taskData v1alpha1.Task, repository, commit string) v1alpha1.Step {
+	return defineArtifactBucketStep(logger, "cache", "download",
+		taskData.Paths.Cache, repository, commit)
 }
 
 // defineUploadArtifactsStep defines the upload artifacts step in the task
-func defineUploadArtifactsStep(logger logr.Logger, taskData v1alpha1.Task) v1alpha1.Step {
-	return defineArtifactBucketStep(logger, "artifacts", "upload", taskData.Paths.Artifacts)
+func defineUploadArtifactsStep(logger logr.Logger, taskData v1alpha1.Task, repository, commit string) v1alpha1.Step {
+	return defineArtifactBucketStep(logger, "artifacts", "upload",
+		taskData.Paths.Artifacts, repository, commit)
 }
 
 // defineUploadCacheStep defines the upload cache step in the task
-func defineUploadCacheStep(logger logr.Logger, taskData v1alpha1.Task) v1alpha1.Step {
-	return defineArtifactBucketStep(logger, "cache", "upload", taskData.Paths.Cache)
+func defineUploadCacheStep(logger logr.Logger, taskData v1alpha1.Task, repository, commit string) v1alpha1.Step {
+	return defineArtifactBucketStep(logger, "cache", "upload",
+		taskData.Paths.Cache, repository, commit)
 }
 
 // defineArtifactBucketStep defines the download step in the task for artifacts or cache
-func defineArtifactBucketStep(logger logr.Logger, commandType, commandAction string, paths []string) v1alpha1.Step {
+func defineArtifactBucketStep(logger logr.Logger, commandType, commandAction string, paths []string, repository, commit string) v1alpha1.Step {
 	// Get the download image from the configuration
 	image := config.Launcher.Data.GetLauncherImage()
 
@@ -51,7 +54,8 @@ func defineArtifactBucketStep(logger logr.Logger, commandType, commandAction str
 
 	// Define the download step
 	env, volumeMounts, command := defineArtifactBucketStepConfig(
-		commandType, commandAction, bucketURL, basePath, paths, bucketParameters, credentials, workspaceDir,
+		commandType, commandAction, bucketURL, basePath, paths, bucketParameters, credentials,
+		workspaceDir, repository, commit,
 	)
 	step := v1alpha1.Step{
 		Name:         fmt.Sprintf("%s-%s", commandAction, commandType),
@@ -71,7 +75,7 @@ func defineArtifactBucketStep(logger logr.Logger, commandType, commandAction str
 
 // defineArtifactBucketStepConfig defines the configuration for the download step in the task for downloading artifacts or cache
 func defineArtifactBucketStepConfig(commandType, commandAction, bucketURL, basePath string, paths []string,
-	bucketParameters []byte, credentials config.BucketCredentials, workspaceDir string) ([]corev1.EnvVar, []corev1.VolumeMount, string) {
+	bucketParameters []byte, credentials config.BucketCredentials, workspaceDir, repository, commit string) ([]corev1.EnvVar, []corev1.VolumeMount, string) {
 
 	// Define the environment variables for the download artifacts step
 	// Environment variables example:
@@ -123,10 +127,10 @@ func defineArtifactBucketStepConfig(commandType, commandAction, bucketURL, baseP
 	command := ""
 	if commandType == "artifacts" {
 		command = fmt.Sprintf("%s %s %s --commit '%s' --destination '%s' --project '%s' %s",
-			launcherBinary, commandType, commandAction, envvars.Variables["COMMIT"], workspaceDir, envvars.Variables["REPOSITORY"], pathArgs)
+			launcherBinary, commandType, commandAction, commit, workspaceDir, repository, pathArgs)
 	} else {
 		command = fmt.Sprintf("%s %s %s --destination '%s' --project '%s' %s",
-			launcherBinary, commandType, commandAction, workspaceDir, envvars.Variables["REPOSITORY"], pathArgs)
+			launcherBinary, commandType, commandAction, workspaceDir, repository, pathArgs)
 	}
 
 	return env, volumeMounts, command
