@@ -1,5 +1,3 @@
-# TODO: Help text for each target
-
 # Image URL to use all building/pushing image targets
 K3D_REGISTRY_NAME ?= k3d-registry
 K3D_REGISTRY_PORT ?= 5111
@@ -37,7 +35,7 @@ SSH_PRIVATE_KEY?=$(HOME)/.ssh/id_rsa
 FLAGS ?= --config config/config_example.yaml
 
 .PHONY: all
-all: build
+all: build. ## Build all go applications and docker images
 
 ##@ General
 
