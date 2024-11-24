@@ -19,6 +19,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
 
@@ -38,14 +39,14 @@ import (
 
 	pipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 	"github.com/sergiotejon/pipeManagerController/internal/controller"
-	// +kubebuilder:scaffold:imports
-
 	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
+	// +kubebuilder:scaffold:imports
 )
 
 var (
-	scheme     = runtime.NewScheme()
-	setupLog   = ctrl.Log.WithName("setup")
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
+
 	configFile string
 )
 
@@ -76,19 +77,55 @@ func main() {
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
 	flag.StringVar(&configFile, "config", defaultConfigFile, "Path to the config file")
-	opts := zap.Options{
-		Development: true,
-	}
+
+	opts := zap.Options{}
+
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
-
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	// Load configuration
 	err := config.LoadLauncherConfig(configFile)
 	if err != nil {
 		log.Fatalf("Error loading launcher config: %v", err)
 	}
+	err = config.LoadCommonConfig(configFile)
+	if err != nil {
+		log.Fatalf("Error loading launcher config: %v", err)
+	}
+
+	// Setup Logger: level
+	switch config.Common.Data.Log.Level {
+	case "debug":
+		opts.Level = zapcore.DebugLevel
+	case "info":
+		opts.Level = zapcore.InfoLevel
+	case "warn":
+		opts.Level = zapcore.WarnLevel
+	case "error":
+		opts.Level = zapcore.ErrorLevel
+	default:
+		opts.Level = zapcore.InfoLevel
+	}
+	// Setups the logger format
+	if config.Common.Data.Log.Format == "json" {
+		opts.Development = false
+	} else {
+		opts.Development = true
+	}
+	// Setup Logger: log to file
+	if config.Common.Data.Log.File == "stdout" {
+		opts.DestWriter = os.Stdout
+	} else if config.Common.Data.Log.File == "stderr" {
+		opts.DestWriter = os.Stderr
+	} else {
+		logFile, err := os.OpenFile(config.Common.Data.Log.File, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatalf("Error opening log file: %v", err)
+		}
+		opts.DestWriter = logFile
+	}
+
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
