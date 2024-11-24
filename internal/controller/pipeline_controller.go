@@ -18,12 +18,14 @@ package controller
 
 import (
 	"context"
-	"github.com/sergiotejon/pipeManagerController/internal/normalize"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/sergiotejon/pipeManagerController/internal/normalize"
+	"github.com/sergiotejon/pipeManagerController/internal/runpipeline"
 
 	pipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 )
@@ -56,29 +58,19 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			logger.Info("Pipeline resource not found. Ignoring since object must be deleted.")
 			return ctrl.Result{}, nil
 		}
-		logger.Error(err, "Failed to get PushMain.")
+		logger.Error(err, "Failed to get pipeline.")
 		return ctrl.Result{}, err
 	}
 
-	// TODO: Your logic here (Next an example)
-
-	logger.Info("Pipeline spec", "spec", pipeline.Spec)
-
-	// TODO: Normalize
 	// Normalize the pipelines
 	normalizedPipelineSpec, err := normalize.Normalize(logger, pipeline.Spec)
 	if err != nil {
 		logger.Error(err, "Error normalizing pipelines")
 	}
 
-	// Aquí puedes iterar sobre las tareas y gestionar cada una
-	for taskName, task := range normalizedPipelineSpec.Tasks {
-		logger.Info("Processing Task", "TaskName", taskName, "Description", task.Description)
-		for _, step := range task.Steps {
-			logger.Info("  Step", "Name", step.Name, "Image", step.Image)
-			// Implementa la lógica para manejar cada step
-			// Por ejemplo, crear Pods o Jobs según los steps
-		}
+	err = runpipeline.NormalizedPipeline(&logger, &normalizedPipelineSpec)
+	if err != nil {
+		logger.Error(err, "Error running pipeline")
 	}
 
 	// Actualizar el estado si es necesario
