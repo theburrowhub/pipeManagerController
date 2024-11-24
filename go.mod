@@ -8,7 +8,7 @@ require (
 	github.com/go-logr/logr v1.4.2
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
-	github.com/sergiotejon/pipeManagerLauncher v0.0.0-20241123144944-4789fe66ef60
+	github.com/sergiotejon/pipeManagerLauncher v0.0.0-20241124182540-7b819d0a3ac8
 	github.com/tektoncd/pipeline v0.65.2
 	go.uber.org/zap v1.27.0
 	gopkg.in/yaml.v3 v3.0.1

@@ -306,8 +306,8 @@ github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=
 github.com/rogpeppe/go-internal v1.12.0/go.mod h1:E+RYuTGaKKdloAfM02xzb0FW3Paa99yedzYV+kq4uf4=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
-github.com/sergiotejon/pipeManagerLauncher v0.0.0-20241123144944-4789fe66ef60 h1:0Os/oKVJLjUXvKE+JFl8jpQEFAjU8nV99ZwkWMrLCnU=
-github.com/sergiotejon/pipeManagerLauncher v0.0.0-20241123144944-4789fe66ef60/go.mod h1:0bK+RNRIMZbn3P0hKx1NDqh+BKQu6FAn3GNpHqNhv88=
+github.com/sergiotejon/pipeManagerLauncher v0.0.0-20241124182540-7b819d0a3ac8 h1:1Ihye5yBFDN2Ym3gW7p0zQoUyskXDNhhRiDwmZDFuFI=
+github.com/sergiotejon/pipeManagerLauncher v0.0.0-20241124182540-7b819d0a3ac8/go.mod h1:u0t27muzyt4VpqVYzap8t1XzRPH1O6JzdmOJnHZmRao=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
