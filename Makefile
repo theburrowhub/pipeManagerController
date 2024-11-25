@@ -112,6 +112,14 @@ build: manifests generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/main.go ${FLAGS}
 
+.PHONY: shell
+shell: ## Open a shell in the devbox
+	if ! command -v devbox &> /dev/null; then \
+    echo "devbox is not installed. Installing devbox..."; \
+		curl -fsSL https://get.jetify.com/devbox | bash; \
+	fi
+	SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY} devbox shell
+
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
