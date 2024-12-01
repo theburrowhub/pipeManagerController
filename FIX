@@ -1,0 +1,42 @@
+[ ]  Normalized pipeline:
+    [ ] The name of the workspaceDir is empty, Is that correct? If so, should it be removed?.
+        "workspaceDir": {
+            "name": ""
+        },
+    [ ] Environment variables. Where are the values fields here?
+          ...,
+          {
+           "name": "AWS_ACCESS_KEY_ID"
+          },
+          {
+           "name": "AWS_SECRET_ACCESS_KEY"
+          },
+          ...
+    [ ] "volumeMounts": [
+        {
+           "name": "s3-credentials",
+           "mountPath": ""
+        }, ...
+        And the mount path? It's empty.
+    [X] In finish pipeline steps we duplicate volume mounts and even we triplicate them. Maybe we are using a non
+    empty slice of volume mounts and we append the new ones. Next an example of the duplicated volume mounts:
+          "volumeMounts": [
+           {
+            "name": "workspace",
+            "mountPath": "/workspaceDir"
+           },
+           {
+            "name": "ssh-credentials",
+            "readOnly": true,
+            "mountPath": "/root/.ssh"
+           },
+           {
+            "name": "workspace",
+            "mountPath": "/workspaceDir"
+           },
+           {
+            "name": "ssh-credentials",
+            "readOnly": true,
+            "mountPath": "/root/.ssh"
+           }
+          ],
