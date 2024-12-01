@@ -1,9 +1,9 @@
 [ ]  Normalized pipeline:
-    [ ] The name of the workspaceDir is empty, Is that correct? If so, should it be removed?.
+    [X] The name of the workspaceDir is empty, Is that correct? If so, should it be removed?.
         "workspaceDir": {
             "name": ""
         },
-    [ ] Environment variables. Where are the values fields here?
+    [X] Environment variables. Where are the values fields here?
           ...,
           {
            "name": "AWS_ACCESS_KEY_ID"
