@@ -30,6 +30,19 @@ func Deploy(l *logr.Logger, p *v1alpha1.PipelineSpec) error {
 	logger = l
 	pipeline = p
 
+	// DEBUG
+	fmt.Println("-------> Pipeline Spec:")
+	jsonData, err := json.MarshalIndent(pipeline, "", " ")
+	if err != nil {
+		logger.Error(err, "Error marshaling normalizedPipelineSpec to JSON")
+	} else {
+		err = os.WriteFile("/tmp/pipeline-spec.json", jsonData, 0666)
+		if err != nil {
+			logger.Error(err, "No funciona esto")
+		}
+	}
+	// DEBUG
+
 	tektonPipelineRun := tektonpipelinev1.PipelineRun{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PipelineRun",
@@ -56,12 +69,11 @@ func runDeploy(pipelineRun *tektonpipelinev1.PipelineRun) error {
 	// TODO: Implement the logic to deploy the PipelineRun to the Kubernetes cluster
 	// DEBUG
 	fmt.Println("-------> PipelineRun:")
-	// Marshal the normalizedPipelineSpec to YAML
 	jsonData, err := json.MarshalIndent(pipelineRun, "", " ")
 	if err != nil {
-		logger.Error(err, "Error marshaling normalizedPipelineSpec to JSON")
+		logger.Error(err, "Error marshaling pipeline run to JSON")
 	} else {
-		err = os.WriteFile("/tmp/file.json", jsonData, 0666)
+		err = os.WriteFile("/tmp/pipeline-run.json", jsonData, 0666)
 		if err != nil {
 			logger.Error(err, "No funciona esto")
 		}

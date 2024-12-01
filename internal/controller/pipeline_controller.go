@@ -73,7 +73,7 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		logger.Error(err, "Error running pipeline")
 	}
 
-	// Actualizar el estado si es necesario
+	// TODO: Update status of the pipeline if needed
 	// pushMain.Status.SomeField = "SomeValue"
 	// if err := r.Status().Update(ctx, &pushMain); err != nil {
 	//     logger.Error(err, "Failed to update PushMain status")
