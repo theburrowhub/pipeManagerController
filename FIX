@@ -1,4 +1,4 @@
-[ ]  Normalized pipeline:
+[X]  Normalized pipeline:
     [X] The name of the workspaceDir is empty, Is that correct? If so, should it be removed?.
         "workspaceDir": {
             "name": ""
