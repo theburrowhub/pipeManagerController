@@ -10,13 +10,13 @@ import (
 	"os"
 
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
+	"github.com/sergiotejon/pipeManagerController/internal/normalize"
 
 	tektonpipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 const (
 	workspaceName = "workspace"
-	workingDir    = "/workspaceDir"
 )
 
 var (
@@ -230,7 +230,7 @@ func buildTaskSteps(data v1alpha1.Task) []tektonpipelinev1.Step {
 			Args:         stepData.Args,
 			Script:       stepData.Script,
 			VolumeMounts: stepData.VolumeMounts,
-			WorkingDir:   workingDir,
+			WorkingDir:   normalize.GetWorkspaceDir(),
 
 			// TODO:
 			//ComputeResources:

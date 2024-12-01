@@ -6,8 +6,6 @@ import (
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 )
 
-const workspaceDir = "/workspaceDir" // Default workspace directory for the all steps
-
 // addDefaultVolumes adds the default volumes to the task
 func addDefaultVolumes(task v1alpha1.Task, workspace corev1.Volume, sshSecretName string) v1alpha1.Task {
 	// Volumes for the workspaceDir and the ssh secret if it is defined

@@ -16,6 +16,8 @@ const (
 	defaultShell     = "/bin/sh"       // Default shell for the automated steps
 	defaultShellSets = "set -e"        // Default shell sets for the automated steps
 	launcherBinary   = "/app/launcher" // Default launcher binary path
+
+	workspaceDir = "/workspaceDir" // Default workspace directory for the all steps
 )
 
 // Normalize normalizes the pipeline data
@@ -199,4 +201,9 @@ func processTask(logger logr.Logger, pipe v1alpha1.PipelineSpec, taskName string
 	taskData.Paths = v1alpha1.Paths{}
 
 	return taskData
+}
+
+// GetWorkspaceDir returns the default workspace directory
+func GetWorkspaceDir() string {
+	return workspaceDir
 }
