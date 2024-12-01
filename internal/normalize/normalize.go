@@ -55,72 +55,69 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 			// Replace the task with the new data in the pipeline
 			pipeline.Tasks[taskName] = taskData
 		}
+	}
 
-		// Normalize Fail tasks
-		for FailTaskName, FailTaskData := range pipeline.FinishTasks.Fail {
-			// Process the task data to add the necessary steps
-			FailTaskData = processTask(logger, pipeline, FailTaskName, FailTaskData, repository, commit)
+	// ... normalize Fail tasks
+	for failTaskName, FailTaskData := range pipeline.FinishTasks.Fail {
+		// Process the task data to add the necessary steps
+		FailTaskData = processTask(logger, pipeline, failTaskName, FailTaskData, repository, commit)
 
-			// Explode batch tasks if they are defined
-			if FailTaskData.Batch != nil {
-				// Explode the batch task
-				tasks := processBatchTask(FailTaskName, FailTaskData)
-				if tasks != nil {
-					// Add all the new tasks to the pipeline
-					for name, tData := range tasks {
-						pipeline.FinishTasks.Fail[name] = tData
-					}
-					// Remove the original task from the pipeline
-					delete(pipeline.Tasks, FailTaskName)
+		// Explode batch tasks if they are defined
+		if FailTaskData.Batch != nil {
+			// Explode the batch task
+			tasks := processBatchTask(failTaskName, FailTaskData)
+			if tasks != nil {
+				// Add all the new tasks to the pipeline
+				for name, tData := range tasks {
+					pipeline.FinishTasks.Fail[name] = tData
 				}
-			} else {
-				// Replace the task with the new data in the pipeline
-				pipeline.FinishTasks.Fail[FailTaskName] = FailTaskData
+				// Remove the original task from the pipeline
+				delete(pipeline.Tasks, failTaskName)
 			}
-
+		} else {
+			// Replace the task with the new data in the pipeline
+			pipeline.FinishTasks.Fail[failTaskName] = FailTaskData
 		}
 
 		// Loop through the list of rawPipelines to launch when the current pipeline fails
 		for _, launchPipelineName := range pipeline.Launch.WhenFail {
-			failTaskName := k8sObjectName("launch", launchPipelineName)
-			pipeline.FinishTasks.Fail[failTaskName] = defineLaunchPipelineTask(pipeline, repository, commit, launchPipelineName)
+			name := k8sObjectName("launch", launchPipelineName)
+			pipeline.FinishTasks.Fail[name] = defineLaunchPipelineTask(pipeline, repository, commit, launchPipelineName)
 		}
+	}
 
-		// Normalize Success tasks
-		for successTaskName, SuccessTaskData := range pipeline.FinishTasks.Success {
-			// Process the task data to add the necessary steps
-			SuccessTaskData = processTask(logger, pipeline, successTaskName, SuccessTaskData, repository, commit)
+	// ... normalize Success tasks
+	for successTaskName, SuccessTaskData := range pipeline.FinishTasks.Success {
+		// Process the task data to add the necessary steps
+		SuccessTaskData = processTask(logger, pipeline, successTaskName, SuccessTaskData, repository, commit)
 
-			// Explode batch tasks if they are defined
-			if SuccessTaskData.Batch != nil {
-				// Explode the batch task
-				tasks := processBatchTask(successTaskName, SuccessTaskData)
-				if tasks != nil {
-					// Add all the new tasks to the pipeline
-					for name, tData := range tasks {
-						pipeline.FinishTasks.Success[name] = tData
-					}
-					// Remove the original task from the pipeline
-					delete(pipeline.Tasks, successTaskName)
+		// Explode batch tasks if they are defined
+		if SuccessTaskData.Batch != nil {
+			// Explode the batch task
+			tasks := processBatchTask(successTaskName, SuccessTaskData)
+			if tasks != nil {
+				// Add all the new tasks to the pipeline
+				for name, tData := range tasks {
+					pipeline.FinishTasks.Success[name] = tData
 				}
-			} else {
-				// Replace the task with the new data in the pipeline
-				pipeline.FinishTasks.Success[successTaskName] = SuccessTaskData
+				// Remove the original task from the pipeline
+				delete(pipeline.Tasks, successTaskName)
 			}
-
+		} else {
+			// Replace the task with the new data in the pipeline
+			pipeline.FinishTasks.Success[successTaskName] = SuccessTaskData
 		}
 
 		// Loop through the list of rawPipelines to launch when the current pipeline finishes successfully
 		for _, launchPipelineName := range pipeline.Launch.WhenSuccess {
-			successTaskName := k8sObjectName("launch", launchPipelineName)
-			pipeline.FinishTasks.Success[successTaskName] = defineLaunchPipelineTask(pipeline, repository, commit, launchPipelineName)
+			name := k8sObjectName("launch", launchPipelineName)
+			pipeline.FinishTasks.Success[name] = defineLaunchPipelineTask(pipeline, repository, commit, launchPipelineName)
 		}
-
-		// Clean
-		// Remove unnecessary cloneRepository and launchPipeline from the pipeline
-		pipeline.CloneRepository = v1alpha1.CloneRepositoryConfig{}
-		pipeline.Launch = v1alpha1.Launch{}
 	}
+
+	// Clean, remove unnecessary cloneRepository and launchPipeline from the pipeline
+	pipeline.CloneRepository = v1alpha1.CloneRepositoryConfig{}
+	pipeline.Launch = v1alpha1.Launch{}
 
 	return pipeline, nil
 }
