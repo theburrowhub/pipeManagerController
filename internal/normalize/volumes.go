@@ -9,14 +9,10 @@ import (
 // addDefaultVolumes adds the default volumes to the task
 func addDefaultVolumes(task v1alpha1.Task, workspace corev1.Volume, sshSecretName string) v1alpha1.Task {
 	// Volumes for the workspaceDir and the ssh secret if it is defined
-	var volumes []corev1.Volume
-	volumes = append(volumes, workspaceVolume(workspace))
+	task.Volumes = append(task.Volumes, workspaceVolume(workspace))
 	if sshSecretName != "" {
-		volumes = append(volumes, sshSecretVolume(sshSecretName))
+		task.Volumes = append(task.Volumes, sshSecretVolume(sshSecretName))
 	}
-
-	// Add the volumes to the task
-	task.Volumes = append(task.Volumes, volumes...)
 
 	return task
 }
@@ -51,14 +47,10 @@ func sshSecretVolume(sshSecretName string) corev1.Volume {
 // addDefaultVolumeMounts adds the default volume mounts to the step
 func addDefaultVolumeMounts(step v1alpha1.Step, workspaceDir, sshSecretName string) v1alpha1.Step {
 	// Volume mounts for the workspaceDir and the ssh secret if it is defined
-	var volumeMounts []corev1.VolumeMount
-	volumeMounts = append(volumeMounts, workspaceVolumeMount(workspaceDir))
+	step.VolumeMounts = append(step.VolumeMounts, workspaceVolumeMount(workspaceDir))
 	if sshSecretName != "" {
-		volumeMounts = append(volumeMounts, sshSecretVolumeMount())
+		step.VolumeMounts = append(step.VolumeMounts, sshSecretVolumeMount())
 	}
-
-	// Add the volumes to the step
-	step.VolumeMounts = append(step.VolumeMounts, volumeMounts...)
 
 	return step
 }
