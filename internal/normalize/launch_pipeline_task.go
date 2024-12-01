@@ -77,5 +77,13 @@ func defineLaunchPipelineTask(currentPipeline v1alpha1.PipelineSpec, repository,
 	cloneRepositoryStep := defineCloneRepoStep(launchPipelineTask, repository, commit)
 	launchPipelineTask.Steps = append([]v1alpha1.Step{cloneRepositoryStep}, launchPipelineTask.Steps...)
 
+	// Add the default volumes for the workspace and the ssh credentials secret if it is defined to the task
+	launchPipelineTask = addDefaultVolumes(launchPipelineTask, currentPipeline.Workspace, currentPipeline.SshSecretName)
+
+	// Add the volumeMounts for the workspaceDir and the ssh secret if it is defined to the steps
+	for i := range launchPipelineTask.Steps {
+		launchPipelineTask.Steps[i] = addDefaultVolumeMounts(launchPipelineTask.Steps[i], workspaceDir, currentPipeline.SshSecretName)
+	}
+
 	return launchPipelineTask
 }
