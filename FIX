@@ -12,7 +12,7 @@
            "name": "AWS_SECRET_ACCESS_KEY"
           },
           ...
-    [ ] "volumeMounts": [
+    [X] "volumeMounts": [
         {
            "name": "s3-credentials",
            "mountPath": ""
