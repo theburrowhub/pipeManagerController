@@ -36,9 +36,6 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 	// - download and upload the artifacts and cache
 	// - expand each batch task in the pipeline
 	for taskName, taskData := range pipeline.Tasks {
-		// Process the task data to add the necessary steps
-		taskData = processTask(logger, pipeline, taskName, taskData, repository, commit)
-
 		// Explode batch tasks if they are defined
 		if taskData.Batch != nil {
 			// Explode the batch task
@@ -50,18 +47,17 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 				}
 				// Remove the original task from the pipeline
 				delete(pipeline.Tasks, taskName)
+				continue
 			}
-		} else {
-			// Replace the task with the new data in the pipeline
-			pipeline.Tasks[taskName] = taskData
 		}
+		// Process the task data to add the necessary steps
+		taskData = processTask(logger, pipeline, taskName, taskData, repository, commit)
+		// Replace the task with the new data in the pipeline
+		pipeline.Tasks[taskName] = taskData
 	}
 
 	// ... normalize Fail tasks
 	for failTaskName, FailTaskData := range pipeline.FinishTasks.Fail {
-		// Process the task data to add the necessary steps
-		FailTaskData = processTask(logger, pipeline, failTaskName, FailTaskData, repository, commit)
-
 		// Explode batch tasks if they are defined
 		if FailTaskData.Batch != nil {
 			// Explode the batch task
@@ -73,12 +69,13 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 				}
 				// Remove the original task from the pipeline
 				delete(pipeline.Tasks, failTaskName)
+				continue
 			}
-		} else {
-			// Replace the task with the new data in the pipeline
-			pipeline.FinishTasks.Fail[failTaskName] = FailTaskData
 		}
-
+		// Process the task data to add the necessary steps
+		FailTaskData = processTask(logger, pipeline, failTaskName, FailTaskData, repository, commit)
+		// Replace the task with the new data in the pipeline
+		pipeline.FinishTasks.Fail[failTaskName] = FailTaskData
 		// Loop through the list of rawPipelines to launch when the current pipeline fails
 		for _, launchPipelineName := range pipeline.Launch.WhenFail {
 			name := k8sObjectName("launch", launchPipelineName)
@@ -88,9 +85,6 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 
 	// ... normalize Success tasks
 	for successTaskName, SuccessTaskData := range pipeline.FinishTasks.Success {
-		// Process the task data to add the necessary steps
-		SuccessTaskData = processTask(logger, pipeline, successTaskName, SuccessTaskData, repository, commit)
-
 		// Explode batch tasks if they are defined
 		if SuccessTaskData.Batch != nil {
 			// Explode the batch task
@@ -102,12 +96,13 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 				}
 				// Remove the original task from the pipeline
 				delete(pipeline.Tasks, successTaskName)
+				continue
 			}
-		} else {
-			// Replace the task with the new data in the pipeline
-			pipeline.FinishTasks.Success[successTaskName] = SuccessTaskData
 		}
-
+		// Process the task data to add the necessary steps
+		SuccessTaskData = processTask(logger, pipeline, successTaskName, SuccessTaskData, repository, commit)
+		// Replace the task with the new data in the pipeline
+		pipeline.FinishTasks.Success[successTaskName] = SuccessTaskData
 		// Loop through the list of rawPipelines to launch when the current pipeline finishes successfully
 		for _, launchPipelineName := range pipeline.Launch.WhenSuccess {
 			name := k8sObjectName("launch", launchPipelineName)
