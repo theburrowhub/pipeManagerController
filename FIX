@@ -40,3 +40,45 @@
             "mountPath": "/root/.ssh"
            }
           ],
+    [X] In batch tasks volume and volumeMounts and duplicated. Example:
+      "buildImages-image1": {
+        "description": "Esta tarea construye varias imágenes de la aplicación en paralelo",
+        "params": {
+         "dockerfile": "path/to/dockerfile1",
+         "imageTag": "tagImage1",
+         "myCustomTaskParam": "myCustomTaskParam",
+         "sidecarEnv": "MyEnv",
+         "sidecarImage": "MyImage"
+        },
+        "cloneRepository": {
+         "options": {}
+        },
+        "paths": {},
+        "steps": [
+         {
+          "name": "kaniko",
+          "image": "alpine:latest",
+          "description": "Este paso construye la imagen",
+          "volumeMounts": [
+           {
+            "name": "workspace",
+            "mountPath": "/workspaceDir"
+           },
+           {
+            "name": "ssh-credentials",
+            "readOnly": true,
+            "mountPath": "/root/.ssh"
+           },
+           {
+            "name": "workspace",
+            "mountPath": "/workspaceDir"
+           },
+           {
+            "name": "ssh-credentials",
+            "readOnly": true,
+            "mountPath": "/root/.ssh"
+           }
+          ],
+          "script": "#!/bin/sh\n\necho \"Paso kaniko\"\n"
+         },
+         ...
