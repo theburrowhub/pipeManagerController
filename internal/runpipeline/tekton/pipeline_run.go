@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-logr/logr"
-	"log"
 	"os"
 
 	v1 "k8s.io/api/core/v1"
@@ -98,7 +97,8 @@ func runDeploy(pipelineRun *tektonpipelinev1.PipelineRun) error {
 	// Create the PipelineRun in the specified namespace
 	createdPR, err := tektonClient.TektonV1().PipelineRuns(pipelineRun.Namespace).Create(context.Background(), pipelineRun, metav1.CreateOptions{})
 	if err != nil {
-		log.Fatalf("Error creando el PipelineRun: %v", err)
+		logger.Error(err, "Error creating PipelineRun")
+		return err
 	}
 
 	logger.Info("PipelineRun created successfully", "name", createdPR.Name)
