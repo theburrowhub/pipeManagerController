@@ -1,6 +1,7 @@
 package runpipeline
 
 import (
+	"fmt"
 	"github.com/go-logr/logr"
 
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
@@ -9,32 +10,26 @@ import (
 	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
 )
 
-func NormalizedPipeline(l *logr.Logger, pipeline *v1alpha1.PipelineSpec) error {
+type PipelineDeployFunc func(*logr.Logger, *v1alpha1.PipelineSpec) error
 
-	err := createNamespace(pipeline.Namespace.Name)
+var pipelineDeployFuncs = map[string]PipelineDeployFunc{
+	"tekton":  tekton.Deploy,
+	"default": tekton.Deploy, // Assuming default is also tekton.Deploy
+}
+
+func NormalizedPipeline(l *logr.Logger, pipeline *v1alpha1.PipelineSpec) error {
+	// Generate the pipeline object based on the pipeline type
+	// Currently only supports Tekton pipelines
+	pipelineType := config.Launcher.Data.PipelineType
+	pipelineDeploy, exists := pipelineDeployFuncs[pipelineType]
+	if !exists {
+		return fmt.Errorf("unsupported pipeline type: %s", pipelineType)
+	}
+
+	err := pipelineDeploy(l, pipeline)
 	if err != nil {
 		return err
 	}
 
-	// Generate the pipeline object based on the pipeline type
-	// Currently only supports Tekton pipelines
-	switch config.Launcher.Data.PipelineType {
-	case "tekton":
-		err := tekton.Deploy(l, pipeline)
-		if err != nil {
-			return err
-		}
-	default:
-		err := tekton.Deploy(l, pipeline)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func createNamespace(namespace string) error {
-	// TODO: Create Namespace if it doesn't exist
 	return nil
 }
