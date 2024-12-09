@@ -19,9 +19,10 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
+
+	"go.uber.org/zap/zapcore"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -37,9 +38,11 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
+
 	pipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 	"github.com/sergiotejon/pipeManagerController/internal/controller"
-	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
+	webhookpipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/internal/webhook/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -200,6 +203,13 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Pipeline")
 		os.Exit(1)
+	}
+	// nolint:goconst
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = webhookpipemanagerv1alpha1.SetupPipelineWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Pipeline")
+			os.Exit(1)
+		}
 	}
 	// +kubebuilder:scaffold:builder
 
