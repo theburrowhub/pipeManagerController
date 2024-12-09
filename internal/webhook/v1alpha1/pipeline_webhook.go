@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -37,7 +36,11 @@ var pipelinelog = logf.Log.WithName("pipeline-resource")
 func SetupPipelineWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).For(&pipemanagerv1alpha1.Pipeline{}).
 		WithValidator(&PipelineCustomValidator{}).
-		WithDefaulter(&PipelineCustomDefaulter{}).
+		WithDefaulter(&PipelineCustomDefaulter{
+			CloneRepository: true,
+			Artifacts:       false,
+			Cache:           false,
+		}).
 		Complete()
 }
 
@@ -51,7 +54,9 @@ func SetupPipelineWebhookWithManager(mgr ctrl.Manager) error {
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as it is used only for temporary operations and does not need to be deeply copied.
 type PipelineCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
+	CloneRepository bool
+	Artifacts       bool
+	Cache           bool
 }
 
 var _ webhook.CustomDefaulter = &PipelineCustomDefaulter{}
@@ -65,9 +70,22 @@ func (d *PipelineCustomDefaulter) Default(ctx context.Context, obj runtime.Objec
 	}
 	pipelinelog.Info("Defaulting for Pipeline", "name", pipeline.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	// Set default values
+	d.applyDefaults(pipeline)
 
 	return nil
+}
+
+func (d *PipelineCustomDefaulter) applyDefaults(pipeline *pipemanagerv1alpha1.Pipeline) {
+	if (pipeline.Spec.CloneRepository == pipemanagerv1alpha1.CloneRepositoryConfig{}) {
+		pipeline.Spec.CloneRepository = pipemanagerv1alpha1.CloneRepositoryConfig{
+			Enable: d.CloneRepository,
+			Options: pipemanagerv1alpha1.CloneRepositoryOptions{
+				Cache:     d.Cache,
+				Artifacts: d.Artifacts,
+			},
+		}
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
@@ -96,7 +114,7 @@ func (v *PipelineCustomValidator) ValidateCreate(ctx context.Context, obj runtim
 
 	// TODO(user): fill in your validation logic upon object creation.
 
-	return nil, nil
+	return nil, validatePipeline(pipeline)
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type Pipeline.
@@ -107,9 +125,10 @@ func (v *PipelineCustomValidator) ValidateUpdate(ctx context.Context, oldObj, ne
 	}
 	pipelinelog.Info("Validation for Pipeline upon update", "name", pipeline.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
+	// TODO: Allow updates status only
 
-	return nil, nil
+	// Impede updates by returning an error
+	return nil, fmt.Errorf("updates to Pipeline objects are not allowed")
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type Pipeline.
@@ -123,4 +142,13 @@ func (v *PipelineCustomValidator) ValidateDelete(ctx context.Context, obj runtim
 	// TODO(user): fill in your validation logic upon object deletion.
 
 	return nil, nil
+}
+
+// validatePipeline validates the Pipeline object
+func validatePipeline(pipeline *pipemanagerv1alpha1.Pipeline) error {
+	// Validate the pipeline object
+
+	// TODO(user): Validate runAfter field if they are corrected referenced to other tasks in the pipeline
+
+	return nil
 }
