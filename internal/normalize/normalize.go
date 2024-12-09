@@ -47,6 +47,8 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 				}
 				// Remove the original task from the pipeline
 				delete(pipeline.Tasks, taskName)
+				// Fix the runAfter references in the pipeline for the new tasks
+				fixRunAfterReferencesForBatchTasks(&pipeline, taskName, getTaskNames(tasks))
 				continue
 			}
 		}
@@ -69,6 +71,8 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 				}
 				// Remove the original task from the pipeline
 				delete(pipeline.Tasks, failTaskName)
+				// Fix the runAfter references in the pipeline for the new tasks
+				fixRunAfterReferencesForBatchTasks(&pipeline, failTaskName, getTaskNames(tasks))
 				continue
 			}
 		}
@@ -96,6 +100,8 @@ func Normalize(logger logr.Logger, pipeline v1alpha1.PipelineSpec) (v1alpha1.Pip
 				}
 				// Remove the original task from the pipeline
 				delete(pipeline.Tasks, successTaskName)
+				// Fix the runAfter references in the pipeline for the new tasks
+				fixRunAfterReferencesForBatchTasks(&pipeline, successTaskName, getTaskNames(tasks))
 				continue
 			}
 		}
