@@ -183,7 +183,8 @@ func buildTasks() []tektonpipelinev1.PipelineTask {
 			Name:        k8s.ToK8sName(name),
 			DisplayName: name,
 			Description: taskData.Description,
-			RunAfter:    taskData.RunAfter,
+			RunAfter:    k8s.ToK8sNames(taskData.RunAfter),
+			Params:      buildTaskParams(taskData),
 			TaskSpec:    buildTaskSpec(name, taskData),
 			// TODO:
 			// Retries:
@@ -201,7 +202,8 @@ func buildFinallyTasks() []tektonpipelinev1.PipelineTask {
 			Name:        k8s.ToK8sName("success_" + name),
 			DisplayName: name,
 			Description: taskData.Description,
-			RunAfter:    taskData.RunAfter,
+			RunAfter:    k8s.ToK8sNames(taskData.RunAfter),
+			Params:      buildTaskParams(taskData),
 			TaskSpec:    buildTaskSpec(name, taskData),
 			When:        buildWhenSuccessExpresion(),
 			// TODO:
@@ -214,7 +216,8 @@ func buildFinallyTasks() []tektonpipelinev1.PipelineTask {
 			Name:        k8s.ToK8sName("fail_" + name),
 			DisplayName: name,
 			Description: taskData.Description,
-			RunAfter:    taskData.RunAfter,
+			RunAfter:    k8s.ToK8sNames(taskData.RunAfter),
+			Params:      buildTaskParams(taskData),
 			TaskSpec:    buildTaskSpec(name, taskData),
 			When:        buildWhenFailExpresion(),
 			// TODO:
@@ -225,12 +228,28 @@ func buildFinallyTasks() []tektonpipelinev1.PipelineTask {
 	return tasks
 }
 
+func buildTaskParams(data v1alpha1.Task) []tektonpipelinev1.Param {
+	var params []tektonpipelinev1.Param
+
+	for paramName, paramValue := range data.Params {
+		params = append(params, tektonpipelinev1.Param{
+			Name: paramName,
+			Value: tektonpipelinev1.ParamValue{
+				StringVal: paramValue,
+				Type:      tektonpipelinev1.ParamTypeString,
+			},
+		})
+	}
+
+	return params
+}
+
 func buildTaskSpec(name string, data v1alpha1.Task) *tektonpipelinev1.EmbeddedTask {
 	return &tektonpipelinev1.EmbeddedTask{
 		TaskSpec: tektonpipelinev1.TaskSpec{
 			DisplayName: name,
 			Description: data.Description,
-			Params:      buildTaskParams(data),
+			Params:      buildTaskParamSpecs(data),
 			Steps:       buildTaskSteps(data),
 			Volumes:     buildTaskVolumes(data),
 			Sidecars:    buildTaskSidecars(data),
@@ -238,7 +257,7 @@ func buildTaskSpec(name string, data v1alpha1.Task) *tektonpipelinev1.EmbeddedTa
 	}
 }
 
-func buildTaskParams(data v1alpha1.Task) tektonpipelinev1.ParamSpecs {
+func buildTaskParamSpecs(data v1alpha1.Task) tektonpipelinev1.ParamSpecs {
 	var paramSpecs tektonpipelinev1.ParamSpecs
 
 	for paramName, _ := range data.Params {
