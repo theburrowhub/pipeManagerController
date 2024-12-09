@@ -20,3 +20,12 @@ func ToK8sName(name string) string {
 	}
 	return name
 }
+
+// ToK8sNames normalizes a slice of strings to be valid Kubernetes resource names
+func ToK8sNames(names []string) []string {
+	var k8sNames []string
+	for _, name := range names {
+		k8sNames = append(k8sNames, ToK8sName(name))
+	}
+	return k8sNames
+}
