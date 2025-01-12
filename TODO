@@ -1,6 +1,6 @@
 [x] Normalize
 [X] Devbox !!
-[ ] Tekton PipelineRun
+[X] Tekton PipelineRun
 [ ] Update Status
 [ ] Admission Webhook
 [ ] CI/CD and semantic version
