@@ -2,10 +2,7 @@ package tekton
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/go-logr/logr"
-	"os"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,19 +31,6 @@ func Deploy(l *logr.Logger, p *v1alpha1.PipelineSpec) error {
 	logger = l
 	pipeline = p
 
-	// DEBUG
-	fmt.Println("-------> Pipeline Spec:")
-	jsonData, err := json.MarshalIndent(pipeline, "", " ")
-	if err != nil {
-		logger.Error(err, "Error marshaling normalizedPipelineSpec to JSON")
-	} else {
-		err = os.WriteFile("/tmp/pipeline-spec.json", jsonData, 0666)
-		if err != nil {
-			logger.Error(err, "No funciona esto")
-		}
-	}
-	// DEBUG
-
 	tektonPipelineRun := tektonpipelinev1.PipelineRun{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PipelineRun",
@@ -70,19 +54,6 @@ func Deploy(l *logr.Logger, p *v1alpha1.PipelineSpec) error {
 }
 
 func runDeploy(pipelineRun *tektonpipelinev1.PipelineRun) error {
-	// DEBUG
-	fmt.Println("-------> PipelineRun:")
-	jsonData, err := json.MarshalIndent(pipelineRun, "", " ")
-	if err != nil {
-		logger.Error(err, "Error marshaling pipeline run to JSON")
-	} else {
-		err = os.WriteFile("/tmp/pipeline-run.json", jsonData, 0666)
-		if err != nil {
-			logger.Error(err, "No funciona esto")
-		}
-	}
-	// DEBUG
-
 	// Create a Tekton Kubernetes client
 	config, err := k8s.LoadKubeConfig()
 	if err != nil {
