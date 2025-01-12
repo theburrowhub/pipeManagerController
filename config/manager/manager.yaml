@@ -91,5 +91,13 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/pipe-manager/config.yaml
+            subPath: config.yaml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: pipemanagercontroller-config
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
