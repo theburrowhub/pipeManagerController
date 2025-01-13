@@ -6,6 +6,9 @@
     "ngrok@latest",
     "k3d@5.7.4"
   ],
+  "env": {
+    "ENABLE_WEBHOOKS": "false"
+  },
   "shell": {
     "init_hook": [
       "alias ls='ls --color=auto'",
