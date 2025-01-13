@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	pipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/api/v1alpha1"
+	"github.com/sergiotejon/pipeManagerController/internal/validate"
 )
 
 // nolint:unused
@@ -148,7 +149,13 @@ func (v *PipelineCustomValidator) ValidateDelete(ctx context.Context, obj runtim
 func validatePipeline(pipeline *pipemanagerv1alpha1.Pipeline) error {
 	// Validate the pipeline object
 
-	// TODO(user): Validate runAfter field if they are corrected referenced to other tasks in the pipeline
+	// Validate runAfter field if they are corrected referenced to other tasks in the pipeline
+	err := validate.RunAfterValidation(pipeline)
+	if err != nil {
+		return err
+	}
+
+	// TODO(user): Add more validation logic here
 
 	return nil
 }
