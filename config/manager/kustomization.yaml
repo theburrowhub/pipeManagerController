@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: k3d-registry:5111/pipemanager-controller
-  newTag: 0.1.0
+  newTag: 0.2.0
