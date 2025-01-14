@@ -43,6 +43,7 @@ import (
 	pipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 	"github.com/sergiotejon/pipeManagerController/internal/controller"
 	webhookpipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/internal/webhook/v1alpha1"
+	tektonpipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -59,6 +60,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(pipemanagerv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(tektonpipelinev1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 

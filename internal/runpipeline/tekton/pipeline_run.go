@@ -1,15 +1,11 @@
 package tekton
 
 import (
-	"context"
-	"github.com/go-logr/logr"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/selection"
 
 	tektonpipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
-	"github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 	"github.com/sergiotejon/pipeManagerController/internal/k8s"
@@ -21,15 +17,11 @@ const (
 )
 
 var (
-	logger   *logr.Logger
-	pipeline *v1alpha1.PipelineSpec
+	pipelineSpec *v1alpha1.PipelineSpec
 )
 
-func Deploy(l *logr.Logger, p *v1alpha1.PipelineSpec) error {
-	var err error
-
-	logger = l
-	pipeline = p
+func CreateKubernetesObject(pipelineUID string, p *v1alpha1.PipelineSpec) (error, *tektonpipelinev1.PipelineRun) {
+	pipelineSpec = p
 
 	tektonPipelineRun := tektonpipelinev1.PipelineRun{
 		TypeMeta: metav1.TypeMeta{
@@ -37,50 +29,24 @@ func Deploy(l *logr.Logger, p *v1alpha1.PipelineSpec) error {
 			APIVersion: "tekton.dev/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: pipeline.Name + "-",
-			Namespace:    pipeline.Namespace.Name,
+			GenerateName: pipelineSpec.Name + "-",
+			Namespace:    pipelineSpec.Namespace.Name,
+			Labels: map[string]string{
+				"pipelineRef": pipelineUID,
+			},
 		},
 		Spec:   buildPipelineRunSpec(),
 		Status: tektonpipelinev1.PipelineRunStatus{},
 	}
 
-	err = runDeploy(&tektonPipelineRun)
-	if err != nil {
-		logger.Error(err, "Error deploying PipelineRun")
-		return err
-	}
-
-	return nil
-}
-
-func runDeploy(pipelineRun *tektonpipelinev1.PipelineRun) error {
-	// Create a Tekton Kubernetes client
-	config, err := k8s.LoadKubeConfig()
-	if err != nil {
-		return err
-	}
-	tektonClient, err := versioned.NewForConfig(config)
-	if err != nil {
-		logger.Error(err, "Error creating Tekton Kubernetes client")
-		return err
-	}
-
-	// Create the PipelineRun in the specified namespace
-	createdPR, err := tektonClient.TektonV1().PipelineRuns(pipelineRun.Namespace).Create(context.Background(), pipelineRun, metav1.CreateOptions{})
-	if err != nil {
-		logger.Error(err, "Error creating PipelineRun")
-		return err
-	}
-
-	logger.Info("PipelineRun created successfully", "name", createdPR.Name)
-	return nil
+	return nil, &tektonPipelineRun
 }
 
 func buildPipelineRunSpec() tektonpipelinev1.PipelineRunSpec {
 	spec := tektonpipelinev1.PipelineRunSpec{
 		Params:     buildParams(),
 		Workspaces: buildWorkspacesBinding(),
-		// TODO: Implement timeouts by global config and pipeline configuration as optional
+		// TODO: Implement timeouts by global config and pipelineSpec configuration as optional
 		//Timeouts: ...
 		PipelineSpec: buildPipelineSpec(),
 	}
@@ -91,7 +57,7 @@ func buildPipelineRunSpec() tektonpipelinev1.PipelineRunSpec {
 func buildParams() []tektonpipelinev1.Param {
 	var params []tektonpipelinev1.Param
 
-	for name, value := range pipeline.Params {
+	for name, value := range pipelineSpec.Params {
 		params = append(params, tektonpipelinev1.Param{
 			Name: name,
 			Value: tektonpipelinev1.ParamValue{
@@ -107,16 +73,16 @@ func buildParams() []tektonpipelinev1.Param {
 func buildWorkspacesBinding() []tektonpipelinev1.WorkspaceBinding {
 	var workspaces []tektonpipelinev1.WorkspaceBinding
 
-	// TODO: test this code with a pipeline that has a workspace defined in the configuration section
+	// TODO: test this code with a pipelineSpec that has a workspace defined in the configuration section
 
-	// If the pipeline has not defined a workspace, create an emptyDir workspace by default
-	emptyDir := pipeline.Workspace.EmptyDir
-	if pipeline.Workspace.EmptyDir == nil &&
-		pipeline.Workspace.PersistentVolumeClaim == nil &&
-		pipeline.Workspace.ConfigMap == nil &&
-		pipeline.Workspace.Secret == nil &&
-		pipeline.Workspace.Projected == nil &&
-		pipeline.Workspace.CSI == nil {
+	// If the pipelineSpec has not defined a workspace, create an emptyDir workspace by default
+	emptyDir := pipelineSpec.Workspace.EmptyDir
+	if pipelineSpec.Workspace.EmptyDir == nil &&
+		pipelineSpec.Workspace.PersistentVolumeClaim == nil &&
+		pipelineSpec.Workspace.ConfigMap == nil &&
+		pipelineSpec.Workspace.Secret == nil &&
+		pipelineSpec.Workspace.Projected == nil &&
+		pipelineSpec.Workspace.CSI == nil {
 		emptyDir = &v1.EmptyDirVolumeSource{}
 	}
 
@@ -125,11 +91,11 @@ func buildWorkspacesBinding() []tektonpipelinev1.WorkspaceBinding {
 
 		// Set every kind of workspace to the same value. Only one of them will be used, that is the one that is not nil
 		EmptyDir:              emptyDir,
-		PersistentVolumeClaim: pipeline.Workspace.PersistentVolumeClaim,
-		ConfigMap:             pipeline.Workspace.ConfigMap,
-		Secret:                pipeline.Workspace.Secret,
-		Projected:             pipeline.Workspace.Projected,
-		CSI:                   pipeline.Workspace.CSI,
+		PersistentVolumeClaim: pipelineSpec.Workspace.PersistentVolumeClaim,
+		ConfigMap:             pipelineSpec.Workspace.ConfigMap,
+		Secret:                pipelineSpec.Workspace.Secret,
+		Projected:             pipelineSpec.Workspace.Projected,
+		CSI:                   pipelineSpec.Workspace.CSI,
 	})
 
 	return workspaces
@@ -137,8 +103,8 @@ func buildWorkspacesBinding() []tektonpipelinev1.WorkspaceBinding {
 
 func buildPipelineSpec() *tektonpipelinev1.PipelineSpec {
 	pipelineSpec := &tektonpipelinev1.PipelineSpec{
-		Description: pipeline.Description,
-		DisplayName: pipeline.Name,
+		Description: pipelineSpec.Description,
+		DisplayName: pipelineSpec.Name,
 		Tasks:       buildTasks(),
 		Finally:     buildFinallyTasks(),
 	}
@@ -149,7 +115,7 @@ func buildPipelineSpec() *tektonpipelinev1.PipelineSpec {
 func buildTasks() []tektonpipelinev1.PipelineTask {
 	var tasks []tektonpipelinev1.PipelineTask
 
-	for name, taskData := range pipeline.Tasks {
+	for name, taskData := range pipelineSpec.Tasks {
 		tasks = append(tasks, tektonpipelinev1.PipelineTask{
 			Name:        k8s.ToK8sName(name),
 			DisplayName: name,
@@ -168,7 +134,7 @@ func buildTasks() []tektonpipelinev1.PipelineTask {
 func buildFinallyTasks() []tektonpipelinev1.PipelineTask {
 	var tasks []tektonpipelinev1.PipelineTask
 
-	for name, taskData := range pipeline.FinishTasks.Success {
+	for name, taskData := range pipelineSpec.FinishTasks.Success {
 		tasks = append(tasks, tektonpipelinev1.PipelineTask{
 			Name:        k8s.ToK8sName("success_" + name),
 			DisplayName: name,
@@ -182,7 +148,7 @@ func buildFinallyTasks() []tektonpipelinev1.PipelineTask {
 		})
 	}
 
-	for name, taskData := range pipeline.FinishTasks.Fail {
+	for name, taskData := range pipelineSpec.FinishTasks.Fail {
 		tasks = append(tasks, tektonpipelinev1.PipelineTask{
 			Name:        k8s.ToK8sName("fail_" + name),
 			DisplayName: name,
@@ -268,8 +234,8 @@ func buildTaskSteps(data v1alpha1.Task) []tektonpipelinev1.Step {
 func buildTaskVolumes(data v1alpha1.Task) []v1.Volume {
 	var volumes []v1.Volume
 
-	if pipeline.Workspace.Name != "" {
-		volumes = append(volumes, pipeline.Workspace)
+	if pipelineSpec.Workspace.Name != "" {
+		volumes = append(volumes, pipelineSpec.Workspace)
 	}
 	for _, volume := range data.Volumes {
 		volumes = append(volumes, volume)
