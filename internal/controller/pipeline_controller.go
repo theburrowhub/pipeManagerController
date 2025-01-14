@@ -95,8 +95,10 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 		// If the PipelineRun object does not exist, create it
 		if len(foundList.Items) == 0 {
+			var normalizedPipelineSpec pipemanagerv1alpha1.PipelineSpec
+
 			// Normalize the pipelines
-			normalizedPipelineSpec, err := normalize.Normalize(logger, pipeline.Spec)
+			normalizedPipelineSpec, err = normalize.Normalize(logger, pipeline.Spec)
 			if err != nil {
 				logger.Error(err, "Error normalizing pipelines")
 			}
