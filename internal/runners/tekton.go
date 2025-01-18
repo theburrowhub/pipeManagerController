@@ -1,29 +1,40 @@
-package tekton
+//go:build tekton
+
+package runners
 
 import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/selection"
 
-	tektonpipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
-
 	"github.com/sergiotejon/pipeManagerController/api/v1alpha1"
 	"github.com/sergiotejon/pipeManagerController/internal/k8s"
 	"github.com/sergiotejon/pipeManagerController/internal/normalize"
-)
 
-const (
-	workspaceName = "workspace"
+	tektonpipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 var (
 	pipelineSpec *v1alpha1.PipelineSpec
 )
 
-func CreateKubernetesObject(pipelineUID string, p *v1alpha1.PipelineSpec) (error, *tektonpipelinev1.PipelineRun) {
-	pipelineSpec = p
+type Runner struct {
+	Object *tektonpipelinev1.PipelineRun
+	List   *tektonpipelinev1.PipelineRunList
+}
 
-	tektonPipelineRun := tektonpipelinev1.PipelineRun{
+func GetRunner() *Runner {
+	return &Runner{
+		Object: &tektonpipelinev1.PipelineRun{},
+		List:   &tektonpipelinev1.PipelineRunList{},
+	}
+}
+
+// BuildPipeline generates the runner for the pipeline based on tekton pipeline run.
+func (r *Runner) BuildPipeline(pipelineUID string, spec *v1alpha1.PipelineSpec) error {
+	pipelineSpec = spec
+
+	r.Object = &tektonpipelinev1.PipelineRun{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PipelineRun",
 			APIVersion: "tekton.dev/v1",
@@ -39,7 +50,7 @@ func CreateKubernetesObject(pipelineUID string, p *v1alpha1.PipelineSpec) (error
 		Status: tektonpipelinev1.PipelineRunStatus{},
 	}
 
-	return nil, &tektonPipelineRun
+	return nil
 }
 
 func buildPipelineRunSpec() tektonpipelinev1.PipelineRunSpec {
