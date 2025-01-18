@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -26,12 +27,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	tektonpipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
-
 	"github.com/sergiotejon/pipeManagerController/internal/normalize"
-	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
+	"github.com/sergiotejon/pipeManagerController/internal/runners"
 
 	pipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/api/v1alpha1"
+	tektonpipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 )
 
 // PipelineReconciler reconciles a Pipeline object
@@ -72,50 +72,46 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	// Generate the pipeline object based on the pipeline type and deploy it
-	pipelineType := config.Launcher.Data.PipelineType
+	pipelineRunner := runners.GetRunner()
 
-	// TODO: Convert this into a function for better readability and maintainability. If the future
-	// requires to support other pipeline types, it will be easier to add them.
-	switch pipelineType {
-	case "tekton":
-		var dep *tektonpipelinev1.PipelineRun
+	// Find the runners for the pipeline
+	err = r.List(ctx, pipelineRunner.List, client.InNamespace(pipeline.Namespace), client.MatchingLabels{
+		"pipelineRef": string(pipeline.GetUID()),
+	})
+	if err != nil {
+		logger.Error(err, "Failed to list runners objects")
+		return ctrl.Result{}, err
+	}
+	// If the runners do not exist, create it
+	if len(pipelineRunner.List.Items) == 0 {
+		var normalizedPipelineSpec pipemanagerv1alpha1.PipelineSpec
 
-		// Check if the PipelineRun object already exists
-		foundList := &tektonpipelinev1.PipelineRunList{}
-
-		labelSelector := client.MatchingLabels{
-			"pipelineRef": string(pipeline.GetUID()),
-		}
-		err = r.List(ctx, foundList, client.InNamespace(pipeline.Namespace), labelSelector)
+		// Normalize the pipeline
+		normalizedPipelineSpec, err = normalize.Normalize(logger, pipeline.Spec)
 		if err != nil {
-			logger.Error(err, "Failed to list PipelineRun objects")
+			logger.Error(err, "Error normalizing pipeline")
+		}
+
+		// Get the runners for the pipeline type
+		err = pipelineRunner.BuildPipeline(string(pipeline.GetUID()), &normalizedPipelineSpec)
+		if err != nil {
+			logger.Error(err, "Error creating runners")
+		}
+
+		// Set the pipeline as the owner of the object created to run the pipeline.
+		// Depending on the pipeline type, the object created can be any kind of Kubernetes object
+		err = controllerutil.SetControllerReference(&pipeline, pipelineRunner.Object, r.Scheme)
+		if err != nil {
+			logger.Error(err, "Error setting controller reference")
+		}
+		// Set the pipeline as the owner of the object created to run the pipeline.
+		logger.Info("Creating new runner", "UID", string(pipeline.GetUID()))
+		if err = r.Create(ctx, pipelineRunner.Object); err != nil {
+			logger.Error(err, "Failed to create new runner object")
 			return ctrl.Result{}, err
 		}
-
-		// If the PipelineRun object does not exist, create it
-		if len(foundList.Items) == 0 {
-			var normalizedPipelineSpec pipemanagerv1alpha1.PipelineSpec
-
-			// Normalize the pipelines
-			normalizedPipelineSpec, err = normalize.Normalize(logger, pipeline.Spec)
-			if err != nil {
-				logger.Error(err, "Error normalizing pipelines")
-			}
-			// Define a new PipelineRun object
-			err, dep = r.tektonPipelineRun(&pipeline, &normalizedPipelineSpec)
-			if err != nil {
-				logger.Error(err, "Error defining pipeline")
-			}
-			// Set the pipeline as the owner of the object created to run the pipeline.
-			logger.Info("Creating new pipelineRun", "UID", string(pipeline.GetUID()))
-			if err = r.Create(ctx, dep); err != nil {
-				logger.Error(err, "Failed to create new PipelineRun object")
-				return ctrl.Result{}, err
-			}
-			// Requeue the request to ensure the Deployment is created
-			return ctrl.Result{RequeueAfter: time.Minute}, nil
-		}
+		// Requeue the request to ensure the Deployment is created
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
 	}
 
 	// TODO: Update status of the pipeline if needed
