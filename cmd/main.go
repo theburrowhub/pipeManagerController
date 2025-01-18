@@ -38,10 +38,10 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	"github.com/sergiotejon/pipeManagerController/internal/controller"
 	"github.com/sergiotejon/pipeManagerLauncher/pkg/config"
 
 	pipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/api/v1alpha1"
-	"github.com/sergiotejon/pipeManagerController/internal/controller"
 	webhookpipemanagerv1alpha1 "github.com/sergiotejon/pipeManagerController/internal/webhook/v1alpha1"
 	tektonpipelinev1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	// +kubebuilder:scaffold:imports
