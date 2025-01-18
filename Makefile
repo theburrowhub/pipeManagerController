@@ -33,6 +33,7 @@ SHELL = /usr/bin/env bash -o pipefail
 SSH_PRIVATE_KEY?=$(HOME)/.ssh/id_rsa
 
 FLAGS ?= --config config/config_example.yaml
+BUILD_TAGS ?= tekton
 
 .PHONY: all
 all: build. ## Build all go applications and docker images
@@ -71,7 +72,7 @@ fmt: ## Run go fmt against code.
 
 .PHONY: vet
 vet: ## Run go vet against code.
-	go vet ./...
+	go vet -tags "${BUILD_TAGS}" ./...
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
@@ -106,11 +107,11 @@ lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
-	go build -o bin/manager cmd/main.go
+	go build -o bin/manager cmd/main.go -tags ${BUILD_TAGS}
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./cmd/main.go ${FLAGS}
+	go run -tags "${BUILD_TAGS}" ./cmd/main.go ${FLAGS}
 
 .PHONY: shell
 shell: ## Open a shell in the devbox
@@ -121,11 +122,12 @@ shell: ## Open a shell in the devbox
 	SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY} devbox shell
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
+# If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
-	$(CONTAINER_TOOL) build -t ${IMG} .
+	$(CONTAINER_TOOL) build --build-arg BUILD_TAGS="$(BUILD_TAGS)" -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
